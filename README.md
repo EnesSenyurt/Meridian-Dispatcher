@@ -1,14 +1,14 @@
-# Yolla - Eşten Eşe Teslimat Uygulaması
+# Meridian-Dispatcher
 
 ## 1️⃣ Proje Bilgileri
-- **Proje Adı:** Yolla - Eşten Eşe Teslimat Uygulaması (Meridian-Dispatcher)
+- **Proje Adı:** Meridian-Dispatcher
 - **Ekip Üyeleri:** [Ekip Üyelerinin İsimleri]
 - **Tarih:** 16 Mart 2026
 
 ## 2️⃣ Giriş
 
 ### Problem Tanımı ve Amaç (Faz 1: Senaryo Belirleme)
-Yolla uygulamasında yoğun trafiğe maruz kalacak temel senaryo: **"Aktif Teslimat İlanlarının Anlık Olarak Listelenmesi ve Kuryeler Tarafından Kabul Edilmesi"** olarak belirlenmiştir. Yüzlerce kullanıcının aynı anda paket göndermek için ilan açtığı ve kuryelerin bu ilanlara aynı anda talip olduğu bir durum simüle edilmektedir.
+Meridian-Dispatcher uygulamasında yoğun trafiğe maruz kalacak temel senaryo: **"Aktif Teslimat İlanlarının Anlık Olarak Listelenmesi ve Kuryeler Tarafından Kabul Edilmesi"** olarak belirlenmiştir. Yüzlerce kullanıcının aynı anda paket göndermek için ilan açtığı ve kuryelerin bu ilanlara aynı anda talip olduğu bir durum simüle edilmektedir.
 
 Sistem en az 4 bağımsız üniteden oluşmaktadır:
 * **Dispatcher (API Gateway):** Sistemin tek giriş noktası ve yetkilendirme merkezi.
@@ -30,7 +30,7 @@ services:
     ports:
       - "8080:8080" # Sadece bu servis dış dünyaya açık
     networks:
-      - yolla_network
+      - meridian_network
     depends_on:
       - auth-service
       - delivery-service
@@ -38,36 +38,36 @@ services:
   auth-service:
     build: ./auth_service
     networks:
-      - yolla_network # Dışarıya kapalı, port yönlendirmesi yok
+      - meridian_network # Dışarıya kapalı, port yönlendirmesi yok
     depends_on:
       - mongo-auth
 
   delivery-service:
     build: ./delivery_service
     networks:
-      - yolla_network
+      - meridian_network
     depends_on:
       - mongo-delivery
 
   mongo-auth:
     image: mongo
     networks:
-      - yolla_network
+      - meridian_network
 
   mongo-delivery:
     image: mongo
     networks:
-      - yolla_network
+      - meridian_network
 
   grafana:
     image: grafana/grafana
     ports:
       - "3000:3000" # Arayüz için dışarıya açık
     networks:
-      - yolla_network
+      - meridian_network
 
 networks:
-  yolla_network:
+  meridian_network:
     driver: bridge
 ```
 
