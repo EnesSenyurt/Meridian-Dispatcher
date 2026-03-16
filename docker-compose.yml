@@ -14,6 +14,7 @@ services:
       - redis-dispatcher
       - auth-service
       - delivery-service
+      - tracking-service
 
   # --- DIŞ DÜNYAYA KAPALI İÇ SERVİSLER ---
   auth-service:
@@ -51,6 +52,20 @@ services:
 
   mongo-delivery:
     image: mongo:latest
+    networks:
+      - meridian_network
+
+  tracking-service:
+    build: ./tracking-service
+    networks:
+      - meridian_network
+    environment:
+      - REDIS_URL=redis://redis-tracking:6379/0
+    depends_on:
+      - redis-tracking
+
+  redis-tracking:
+    image: redis:alpine
     networks:
       - meridian_network
 
