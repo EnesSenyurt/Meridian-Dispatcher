@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # --- SADECE DIŞARI AÇIK OLAN SERVİS ---
+  dispatcher:
+    build: ./dispatcher
+    ports:
+      - "8080:8000"  # Dışarıya 8080'den açık. İçerideki 8000'e bağlı.
+    networks:
+      - meridian_network
+    environment:
+      - REDIS_URL=redis://redis-dispatcher:6379/0
+    depends_on:
+      - redis-dispatcher
+      - auth-service
+      - delivery-service
+
+  # --- DIŞ DÜNYAYA KAPALI İÇ SERVİSLER ---
+  auth-service:
+    build: ./auth-service
+    # port YOK: Dışarıdan doğrudan 5001 gibi portlarla ulaşılamaz!
+    networks:
+      - meridian_network
+    environment:
+      - MONGO_URL=mongodb://mongo-auth:27017
+      - MONGO_DB=auth_db
+    depends_on:
+      - mongo-auth
+
+  delivery-service:
+    build: ./delivery-service
+    # port YOK: Dışarıdan doğrudan portlarla ulaşılamaz!
+    networks:
+      - meridian_network
+    environment:
+      - MONGO_URL=mongodb://mongo-delivery:27017
+      - MONGO_DB=delivery_db
+    depends_on:
+      - mongo-delivery
+
+  # --- İZOLE VERİ TABANLARI (DIŞA KAPALI) ---
+  redis-dispatcher:
+    image: redis:alpine
+    networks:
+      - meridian_network
+
+  mongo-auth:
+    image: mongo:latest
+    networks:
+      - meridian_network
+
+  mongo-delivery:
+    image: mongo:latest
+    networks:
+      - meridian_network
+
+networks:
+  meridian_network:
+    driver: bridge
