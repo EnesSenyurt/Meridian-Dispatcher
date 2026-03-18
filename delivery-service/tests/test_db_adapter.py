@@ -3,10 +3,10 @@ import asyncio
 
 @pytest.mark.asyncio
 async def test_mongodb_adapter_connection():
-    # TODO: Implement test for MongoDB connection
+    # TODO: MongoDB bağlantı testi implement edilecek
     pass
 
 @pytest.mark.asyncio
 async def test_mongodb_adapter_execution():
-    # TODO: Implement test for MongoDB execution
+    # TODO: MongoDB komut çalıştırma testi implement edilecek
     pass
