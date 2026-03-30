@@ -4,3 +4,4 @@ redis
 httpx
 pytest
 pytest-asyncio
+python-jose[cryptography]

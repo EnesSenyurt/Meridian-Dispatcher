@@ -6,3 +6,6 @@ isterler.md
 venv/
 __pycache__/
 *.pyc
+
+# Secrets
+.env

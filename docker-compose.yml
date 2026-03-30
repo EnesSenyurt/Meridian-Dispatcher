@@ -13,6 +13,7 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:8000
       - DELIVERY_SERVICE_URL=http://delivery-service:8000
       - TRACKING_SERVICE_URL=http://tracking-service:8000
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - redis-dispatcher
       - auth-service
@@ -28,6 +29,7 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo-auth:27017
       - MONGO_DB=auth_db
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - mongo-auth
 

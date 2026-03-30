@@ -3,8 +3,10 @@ from fastapi.responses import Response, JSONResponse
 from .database import db
 from .config import resolve_upstream
 from .proxy import forward_request, ProxyUpstreamError
+from .middleware import JWTAuthMiddleware
 
 app = FastAPI(title="Dispatcher Gateway")
+app.add_middleware(JWTAuthMiddleware)
 
 
 @app.on_event("startup")

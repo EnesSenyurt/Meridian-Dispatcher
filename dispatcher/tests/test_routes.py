@@ -1,7 +1,28 @@
 import pytest
 import httpx
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
+from jose import jwt
+
+_SECRET = "test-secret-key-for-testing-only"
+_ALGORITHM = "HS256"
+
+
+def _make_valid_token() -> str:
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": "test-user-id",
+        "email": "test@example.com",
+        "role": "sender",
+        "iat": now,
+        "exp": now + timedelta(hours=24),
+    }
+    return jwt.encode(payload, _SECRET, algorithm=_ALGORITHM)
+
+
+def _auth_headers() -> dict:
+    return {"authorization": f"Bearer {_make_valid_token()}"}
 
 
 def _fake_httpx_response(status_code: int, content: bytes, headers: dict = None):
@@ -21,6 +42,7 @@ class TestProxyRouterHappyPath:
         with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
             mock_fwd.return_value = upstream_resp
             with TestClient(app, raise_server_exceptions=False) as client:
+                # /auth/login is a public path — no token needed
                 response = client.get("/auth/login")
 
         assert response.status_code == 200
@@ -34,7 +56,11 @@ class TestProxyRouterHappyPath:
         with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
             mock_fwd.return_value = upstream_resp
             with TestClient(app, raise_server_exceptions=False) as client:
-                response = client.post("/delivery/orders", json={"item": "box"})
+                response = client.post(
+                    "/delivery/orders",
+                    json={"item": "box"},
+                    headers=_auth_headers(),
+                )
 
         assert response.status_code == 201
 
@@ -45,7 +71,7 @@ class TestProxyRouterHappyPath:
         with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
             mock_fwd.return_value = upstream_resp
             with TestClient(app, raise_server_exceptions=False) as client:
-                response = client.get("/tracking/shipments/42")
+                response = client.get("/tracking/shipments/42", headers=_auth_headers())
 
         assert response.status_code == 200
         call_kwargs = mock_fwd.call_args.kwargs
@@ -58,6 +84,7 @@ class TestProxyRouterHappyPath:
         with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
             mock_fwd.return_value = upstream_resp
             with TestClient(app, raise_server_exceptions=False) as client:
+                # /auth/register is a public path — no token needed
                 client.post(
                     "/auth/register",
                     content=b'{"username":"alice"}',
@@ -70,14 +97,18 @@ class TestProxyRouterHappyPath:
     def test_authorization_header_is_forwarded(self):
         from app.main import app
         upstream_resp = _fake_httpx_response(200, b'{}')
+        valid_token = _make_valid_token()
 
         with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
             mock_fwd.return_value = upstream_resp
             with TestClient(app, raise_server_exceptions=False) as client:
-                client.get("/auth/profile", headers={"authorization": "Bearer secret-token"})
+                client.get(
+                    "/auth/profile",
+                    headers={"authorization": f"Bearer {valid_token}"},
+                )
 
         call_kwargs = mock_fwd.call_args.kwargs
-        assert call_kwargs["headers"].get("authorization") == "Bearer secret-token"
+        assert call_kwargs["headers"].get("authorization") == f"Bearer {valid_token}"
 
     def test_query_params_are_forwarded(self):
         from app.main import app
@@ -86,7 +117,10 @@ class TestProxyRouterHappyPath:
         with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
             mock_fwd.return_value = upstream_resp
             with TestClient(app, raise_server_exceptions=False) as client:
-                client.get("/tracking/live?vehicle_id=7&limit=5")
+                client.get(
+                    "/tracking/live?vehicle_id=7&limit=5",
+                    headers=_auth_headers(),
+                )
 
         call_kwargs = mock_fwd.call_args.kwargs
         assert call_kwargs["params"]["vehicle_id"] == "7"
@@ -98,7 +132,7 @@ class TestProxyRouterErrors:
     def test_unknown_path_returns_404(self):
         from app.main import app
         with TestClient(app, raise_server_exceptions=False) as client:
-            response = client.get("/payments/invoice")
+            response = client.get("/payments/invoice", headers=_auth_headers())
         assert response.status_code == 404
         assert "payments/invoice" in response.json()["detail"]
 
@@ -109,6 +143,7 @@ class TestProxyRouterErrors:
         with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
             mock_fwd.side_effect = ProxyUpstreamError("Connection refused")
             with TestClient(app, raise_server_exceptions=False) as client:
+                # /auth/login is a public path — no token needed
                 response = client.get("/auth/login")
 
         assert response.status_code == 502
@@ -121,6 +156,7 @@ class TestProxyRouterErrors:
         with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
             mock_fwd.return_value = upstream_resp
             with TestClient(app, raise_server_exceptions=False) as client:
+                # /auth/login is a public path — no token needed
                 response = client.get("/auth/login")
 
         assert response.status_code == 500
