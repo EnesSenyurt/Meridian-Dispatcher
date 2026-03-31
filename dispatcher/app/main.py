@@ -1,12 +1,61 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import Response, JSONResponse
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+import time
+from datetime import datetime
+
 from .database import db
 from .config import resolve_upstream
 from .proxy import forward_request, ProxyUpstreamError, ProxyTimeoutError
 from .middleware import JWTAuthMiddleware
+from .metrics import REQUEST_COUNT, REQUEST_LATENCY, ACTIVE_REQUESTS, LOG_ENTRY
 
 app = FastAPI(title="Dispatcher Gateway")
+
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    if request.url.path in {"/metrics", "/health"}:
+        return await call_next(request)
+
+    service_name = "unknown"
+    if request.url.path.startswith("/auth"):
+        service_name = "auth"
+    elif request.url.path.startswith("/delivery"):
+        service_name = "delivery"
+    elif request.url.path.startswith("/tracking"):
+        service_name = "tracking"
+
+    start_time = time.time()
+    timestamp = datetime.now().isoformat()
+    
+    ACTIVE_REQUESTS.inc()
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    except Exception as exc:
+        status_code = 500
+        raise exc
+    finally:
+        ACTIVE_REQUESTS.dec()
+        duration = time.time() - start_time
+        REQUEST_COUNT.labels(method=request.method, service=service_name, status=str(status_code)).inc()
+        REQUEST_LATENCY.labels(method=request.method, service=service_name, status=str(status_code)).observe(duration)
+        
+        dur_ms = f"{duration * 1000:.0f}ms"
+        LOG_ENTRY.labels(
+            timestamp=timestamp,
+            method=request.method,
+            path=request.url.path,
+            status=str(status_code),
+            duration_ms=dur_ms
+        ).set(1)
+
 app.add_middleware(JWTAuthMiddleware)
+
+@app.get("/metrics")
+async def get_metrics():
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.on_event("startup")
