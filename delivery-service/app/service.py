@@ -16,8 +16,9 @@ class DeliveryService:
             raise HTTPException(status_code=400, detail="Invalid delivery ID format")
 
     def _serialize(self, doc: dict) -> DeliveryResponse:
+        did = str(doc["_id"])
         return DeliveryResponse(
-            id=str(doc["_id"]),
+            id=did,
             sender_id=doc["sender_id"],
             recipient_name=doc["recipient_name"],
             recipient_address=doc["recipient_address"],
@@ -26,6 +27,13 @@ class DeliveryService:
             status=doc["status"],
             created_at=doc["created_at"],
             updated_at=doc["updated_at"],
+            links={
+                "self": f"/delivery/{did}",
+                "collection": "/delivery",
+                "update": f"/delivery/{did}",
+                "delete": f"/delivery/{did}",
+                "tracking": f"/tracking/{did}/location"
+            }
         )
 
     async def create_delivery(self, body: DeliveryCreate) -> DeliveryResponse:

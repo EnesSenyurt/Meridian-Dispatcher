@@ -32,6 +32,8 @@ def test_create_delivery_returns_201():
     data = resp.json()
     assert data["recipient_name"] == "John Doe"
     assert data["id"] == "64f0000000000000000000ab"
+    assert "_links" in data
+    assert data["_links"]["self"] == "/delivery/64f0000000000000000000ab"
 
 def test_get_delivery_not_found_returns_404():
     async def fake_execute(collection, operation, *args, **kwargs):
@@ -65,6 +67,7 @@ def test_list_deliveries_returns_200():
         resp = client.get("/delivery")
     assert resp.status_code == 200
     assert len(resp.json()) == 1
+    assert "_links" in resp.json()[0]
 
 def test_update_delivery_returns_200():
     async def fake_execute(collection, operation, *args, **kwargs):
@@ -88,6 +91,7 @@ def test_update_delivery_returns_200():
         )
     assert resp.status_code == 200
     assert resp.json()["status"] == "in_transit"
+    assert "_links" in resp.json()
 
 def test_delete_delivery_returns_204():
     async def fake_execute(collection, operation, *args, **kwargs):
