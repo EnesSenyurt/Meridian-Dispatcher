@@ -11,7 +11,7 @@ def test_update_location_returns_200():
         if command == "set":
             return "OK"
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.post(
             "/tracking/123/location",
             json={"lat": 40.7, "lng": 29.9, "status": "on_way"}
@@ -24,7 +24,7 @@ def test_get_location_returns_200():
         if command == "get":
             return '{"lat": 40.7, "lng": 29.9, "status": "on_way"}'
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.get("/tracking/123/location")
     assert resp.status_code == 200
     assert resp.json()["lat"] == 40.7
@@ -34,6 +34,6 @@ def test_get_location_not_found_returns_404():
         if command == "get":
             return None
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.get("/tracking/999/location")
     assert resp.status_code == 404
