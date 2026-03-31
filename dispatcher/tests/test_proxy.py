@@ -132,8 +132,8 @@ class TestForwardRequestErrors:
                     params={},
                 )
 
-    async def test_timeout_raises_proxy_upstream_error(self):
-        from app.proxy import forward_request, ProxyUpstreamError
+    async def test_timeout_raises_proxy_timeout_error(self):
+        from app.proxy import forward_request, ProxyTimeoutError
 
         with patch("app.proxy.httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
@@ -144,7 +144,7 @@ class TestForwardRequestErrors:
             )
             mock_client_cls.return_value = mock_client
 
-            with pytest.raises(ProxyUpstreamError):
+            with pytest.raises(ProxyTimeoutError):
                 await forward_request(
                     method="GET",
                     url="http://auth-service:8000/auth/login",
