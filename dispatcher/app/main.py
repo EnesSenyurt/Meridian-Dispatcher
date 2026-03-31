@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response, JSONResponse
 from .database import db
 from .config import resolve_upstream
-from .proxy import forward_request, ProxyUpstreamError
+from .proxy import forward_request, ProxyUpstreamError, ProxyTimeoutError
 from .middleware import JWTAuthMiddleware
 
 app = FastAPI(title="Dispatcher Gateway")
@@ -47,6 +47,11 @@ async def reverse_proxy(request: Request, path: str):
         return JSONResponse(
             status_code=502,
             content={"detail": f"Upstream service unavailable: {exc}"},
+        )
+    except ProxyTimeoutError as exc:
+        return JSONResponse(
+            status_code=503,
+            content={"detail": f"Upstream service timeout: {exc}"},
         )
 
     return Response(
