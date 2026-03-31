@@ -30,7 +30,7 @@ def test_register_returns_201(monkeypatch):
         if operation == "create_index":
             return None
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.post(
             "/auth/register",
             json={"email": "new@example.com", "password": "secret", "role": "sender"},
@@ -49,7 +49,7 @@ def test_register_duplicate_via_find_one_returns_409(monkeypatch):
         if operation == "create_index":
             return None
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.post(
             "/auth/register",
             json={"email": "existing@example.com", "password": "x", "role": "courier"},
@@ -66,7 +66,7 @@ def test_register_duplicate_via_duplicate_key_error_returns_409():
         if operation == "create_index":
             return None
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.post(
             "/auth/register",
             json={"email": "race@example.com", "password": "x", "role": "sender"},
@@ -112,7 +112,7 @@ def test_login_returns_200_with_token():
         if operation == "create_index":
             return None
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.post(
             "/auth/login",
             json={"email": "u@example.com", "password": "pass123"},
@@ -135,7 +135,7 @@ def test_login_wrong_password_returns_401():
         if operation == "create_index":
             return None
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.post(
             "/auth/login",
             json={"email": "u@example.com", "password": "wrongpass"},
@@ -150,7 +150,7 @@ def test_login_unknown_email_returns_401():
         if operation == "create_index":
             return None
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.post(
             "/auth/login",
             json={"email": "nobody@example.com", "password": "x"},

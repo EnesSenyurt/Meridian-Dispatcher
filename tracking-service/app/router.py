@@ -1,22 +1,17 @@
-import json
-from fastapi import APIRouter, HTTPException
-from .database import db
+from fastapi import APIRouter, Depends
 from .models import LocationUpdate
+from .repository import BaseTrackingRepository, get_tracking_repository
+from .service import TrackingService
 
 router = APIRouter(prefix="/tracking", tags=["tracking"])
 
+def get_tracking_service(repo: BaseTrackingRepository = Depends(get_tracking_repository)) -> TrackingService:
+    return TrackingService(repo)
+
 @router.post("/{tracking_id}/location", status_code=200)
-async def update_location(tracking_id: str, location: LocationUpdate):
-    loc_data = json.dumps(location.model_dump())
-    result = await db.execute("set", f"loc_{tracking_id}", loc_data)
-    # Redis typically returns "OK" for set, mocked as "OK" or True
-    if result == "OK" or result is True or result:
-        return {"message": "Location updated successfully"}
-    raise HTTPException(status_code=500, detail="Could not save location")
+async def update_location(tracking_id: str, location: LocationUpdate, service: TrackingService = Depends(get_tracking_service)):
+    return await service.update_location(tracking_id, location)
 
 @router.get("/{tracking_id}/location", status_code=200)
-async def get_location(tracking_id: str):
-    loc_data = await db.execute("get", f"loc_{tracking_id}")
-    if not loc_data:
-        raise HTTPException(status_code=404, detail="Location not found")
-    return json.loads(loc_data)
+async def get_location(tracking_id: str, service: TrackingService = Depends(get_tracking_service)):
+    return await service.get_location(tracking_id)

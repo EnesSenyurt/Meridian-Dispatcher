@@ -16,7 +16,7 @@ def test_create_delivery_returns_201():
             result.inserted_id = inserted_id
             return result
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.post(
             "/delivery",
             json={
@@ -38,7 +38,7 @@ def test_get_delivery_not_found_returns_404():
         if operation == "find_one":
             return None
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.get("/delivery/64f0000000000000000000ab")
     assert resp.status_code == 404
 
@@ -61,7 +61,7 @@ def test_list_deliveries_returns_200():
             ])
             return cursor
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.get("/delivery")
     assert resp.status_code == 200
     assert len(resp.json()) == 1
@@ -81,7 +81,7 @@ def test_update_delivery_returns_200():
                 "updated_at": "2026-01-01T00:00:00Z"
             }
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.put(
             "/delivery/64f0000000000000000000ab",
             json={"status": "in_transit"}
@@ -96,6 +96,6 @@ def test_delete_delivery_returns_204():
             result.deleted_count = 1
             return result
 
-    with patch("app.router.db.execute", side_effect=fake_execute):
+    with patch("app.repository.db.execute", side_effect=fake_execute):
         resp = client.delete("/delivery/64f0000000000000000000ab")
     assert resp.status_code == 204
