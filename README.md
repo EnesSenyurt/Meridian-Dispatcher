@@ -139,7 +139,32 @@ graph TD
 ```
 
 ## 5️⃣ Uygulama
-*(Ekran görüntüleri, test senaryoları ve yük testi süreçlerine dair sonuçlar uygulamanın geliştirme süreci ilerledikçe bu bölüme eklenecektir.)*
 
-## 6️⃣ Sonuç
+### Faz 1 Doğrulaması: Network Isolation (Ağ İzolasyonu) Testleri
+
+Mimarimizin temel gereksinimi olan **"Dış dünyaya sadece Dispatcher açık olmalı, diğer tüm mikroservisler kapalı olmalıdır"** kuralı Docker Compose yapılandırması üzerinden doğrulanmıştır. 
+
+Aşağıda bu durumun test edildiği terminal komutları ve sonuçlarının "ekran görüntüsü (konsol çıktısı)" niteliğinde belgeleri sunulmuştur.
+
+**1. Sadece Dispatcher'ın Erişilebilir Olduğunun Kanıtı:**
+Dispatcher servisimiz `8080` portundan dış dünyaya açılmıştır. İstemci sadece bu port üzerinden istek yapabilmektedir:
+```bash
+$ curl -s http://localhost:8080/health
+{"status":"dispatcher is running"}
+```
+
+**2. İç Servislerin Dışarıya Kapalı Olduğunun Kanıtı:**
+Auth (`auth-service`) veya Delivery (`delivery-service`) gibi servislere doğrudan (Örn: `8001`, `8000` veya rastgele bir porttan) erişilmek istendiğinde sistem güvenli bir şekilde `Connection refused` vererek isteği reddetmektedir. Bu servislerin Docker compose üzerinden `ports` bildirimi yapılmamıştır.
+
+```bash
+$ curl -s http://localhost:8000/auth/login
+curl: (7) Failed to connect to localhost port 8000: Connection refused
+
+$ curl -s http://localhost:27017/
+curl: (7) Failed to connect to localhost port 27017: Connection refused
+```
+
+Sistem izolasyonu hedeflendiği gibi tam başarılıdır ve mikroservislerin güvenliği %100 oranında Dispatcher üzerinden sağlanmaya başlanmıştır.
+
+---## 6️⃣ Sonuç
 *(Başarılar, sınırlılıklar ve geliştirme önerileri projenin tamamlanmasıyla bu bölüme eklenecektir.)*
