@@ -149,6 +149,18 @@ class TestProxyRouterErrors:
         assert response.status_code == 502
         assert "upstream" in response.json()["detail"].lower()
 
+    def test_upstream_timeout_returns_503(self):
+        from app.main import app
+        from app.proxy import ProxyTimeoutError
+
+        with patch("app.main.forward_request", new_callable=AsyncMock) as mock_fwd:
+            mock_fwd.side_effect = ProxyTimeoutError("Read timeout")
+            with TestClient(app, raise_server_exceptions=False) as client:
+                response = client.get("/auth/login")
+
+        assert response.status_code == 503
+        assert "timeout" in response.json()["detail"].lower()
+
     def test_upstream_500_is_passed_through(self):
         from app.main import app
         upstream_resp = _fake_httpx_response(500, b'{"error":"internal"}')

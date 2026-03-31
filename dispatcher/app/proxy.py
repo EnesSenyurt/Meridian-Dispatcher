@@ -9,6 +9,10 @@ class ProxyUpstreamError(Exception):
     pass
 
 
+class ProxyTimeoutError(Exception):
+    pass
+
+
 async def forward_request(
     method: str,
     url: str,
@@ -30,5 +34,7 @@ async def forward_request(
                 content=body,
                 params=params,
             )
-    except (httpx.ConnectError, httpx.TimeoutException) as exc:
+    except httpx.TimeoutException as exc:
+        raise ProxyTimeoutError(str(exc)) from exc
+    except httpx.ConnectError as exc:
         raise ProxyUpstreamError(str(exc)) from exc
