@@ -22,7 +22,15 @@ class AuthService:
         except DuplicateKeyError:
             raise HTTPException(status_code=409, detail="Email already registered")
 
-        return {"user_id": str(result.inserted_id), "email": body.email, "role": body.role}
+        return {
+            "user_id": str(result.inserted_id), 
+            "email": body.email, 
+            "role": body.role,
+            "_links": {
+                "self": "/auth/register",
+                "login": "/auth/login"
+            }
+        }
 
     async def login(self, body: LoginRequest) -> TokenResponse:
         user = await self.repository.find_by_email(body.email)
@@ -30,7 +38,13 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         token = create_access_token(str(user["_id"]), user["email"], user["role"])
-        return TokenResponse(access_token=token)
+        return TokenResponse(
+            access_token=token,
+            links={
+                "self": "/auth/login",
+                "verify": "/auth/verify"
+            }
+        )
 
     async def verify_token(self, authorization: str) -> UserInfo:
         if not authorization.startswith("Bearer "):
@@ -46,4 +60,8 @@ class AuthService:
             user_id=payload["sub"],
             email=payload["email"],
             role=payload["role"],
+            links={
+                "self": "/auth/verify",
+                "deliveries": "/delivery"
+            }
         )

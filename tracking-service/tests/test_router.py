@@ -18,6 +18,8 @@ def test_update_location_returns_200():
         )
     assert resp.status_code == 200
     assert resp.json()["message"] == "Location updated successfully"
+    assert "_links" in resp.json()
+    assert resp.json()["_links"]["delivery"] == "/delivery/123"
 
 def test_get_location_returns_200():
     async def fake_execute(command, *args, **kwargs):
@@ -28,6 +30,8 @@ def test_get_location_returns_200():
         resp = client.get("/tracking/123/location")
     assert resp.status_code == 200
     assert resp.json()["lat"] == 40.7
+    assert "_links" in resp.json()
+    assert resp.json()["_links"]["self"] == "/tracking/123/location"
 
 def test_get_location_not_found_returns_404():
     async def fake_execute(command, *args, **kwargs):

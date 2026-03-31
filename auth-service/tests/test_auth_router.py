@@ -40,6 +40,8 @@ def test_register_returns_201(monkeypatch):
     assert data["email"] == "new@example.com"
     assert data["role"] == "sender"
     assert "user_id" in data
+    assert "_links" in data
+    assert data["_links"]["self"] == "/auth/register"
 
 
 def test_register_duplicate_via_find_one_returns_409(monkeypatch):
@@ -121,6 +123,8 @@ def test_login_returns_200_with_token():
     data = resp.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
+    assert "_links" in data
+    assert "verify" in data["_links"]
     payload = jwt.decode(data["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
     assert payload["email"] == "u@example.com"
     assert payload["role"] == "courier"
@@ -182,6 +186,8 @@ def test_verify_valid_token_returns_user_info():
     assert data["email"] == "v@example.com"
     assert data["role"] == "sender"
     assert data["user_id"] == "uid1"
+    assert "_links" in data
+    assert data["_links"]["deliveries"] == "/delivery"
 
 
 def test_verify_missing_authorization_header_returns_422():

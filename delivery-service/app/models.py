@@ -22,6 +22,7 @@ class DeliveryUpdate(BaseModel):
 
 
 class DeliveryResponse(BaseModel):
+    model_config = {"populate_by_name": True}
     id: str
     sender_id: str
     recipient_name: str
@@ -31,3 +32,4 @@ class DeliveryResponse(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    links: dict = Field(default_factory=dict, alias="_links")
