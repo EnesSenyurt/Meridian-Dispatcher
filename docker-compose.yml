@@ -99,6 +99,23 @@ services:
     depends_on:
       - prometheus
 
+  # --- YÜK TESTLERİ (docker-compose --profile loadtest up locust) ---
+  locust:
+    build: ./load-tests
+    ports:
+      - "8089:8089"
+    environment:
+      - LOCUST_HOST=http://dispatcher:8000
+    command: --host http://dispatcher:8000 --locustfile /locust/locustfile.py
+    volumes:
+      - ./load-tests/results:/locust/results
+    networks:
+      - meridian_network
+    depends_on:
+      - dispatcher
+    profiles:
+      - loadtest
+
 networks:
   meridian_network:
     driver: bridge

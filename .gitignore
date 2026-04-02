@@ -9,3 +9,6 @@ __pycache__/
 
 # Secrets
 .env
+
+# Load test results
+load-tests/results/
