@@ -14,15 +14,16 @@ class DispatcherUser(HttpUser):
     def on_start(self):
         """Her sanal kullanıcı başlangıçta bir kez register + login yapar."""
         suffix = random_suffix()
-        self.username = f"user_{suffix}"
+        self.email = f"user_{suffix}@loadtest.local"
         self.password = "TestPass123!"
         self.token = None
         self.delivery_id = None
 
         # Register
         register_payload = {
-            "username": self.username,
+            "email": self.email,
             "password": self.password,
+            "role": random.choice(["sender", "courier"]),
         }
         with self.client.post(
             "/auth/register",
@@ -36,7 +37,7 @@ class DispatcherUser(HttpUser):
 
         # Login
         login_payload = {
-            "username": self.username,
+            "email": self.email,
             "password": self.password,
         }
         with self.client.post(
@@ -69,7 +70,7 @@ class DispatcherUser(HttpUser):
 
         suffix = random_suffix(6)
         payload = {
-            "sender_id": self.username,
+            "sender_id": self.email,
             "recipient_name": f"Recipient {suffix}",
             "recipient_address": f"{random.randint(1, 999)} Test Street, City",
             "recipient_phone": f"+90{random.randint(5000000000, 5999999999)}",
