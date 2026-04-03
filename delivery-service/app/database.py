@@ -36,6 +36,11 @@ class MongoDBAdapter(AbstractDatabaseAdapter):
             await self.connect()
         col = self.db[collection]
         method = getattr(col, operation)
+        
+        # 'find' ve 'aggregate' gibi metodlar coroutine değil, direkt cursor döner
+        if operation in ("find", "aggregate"):
+            return method(*args, **kwargs)
+            
         return await method(*args, **kwargs)
 
 db = MongoDBAdapter()

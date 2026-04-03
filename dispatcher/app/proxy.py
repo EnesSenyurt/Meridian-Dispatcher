@@ -36,5 +36,5 @@ async def forward_request(
             )
     except httpx.TimeoutException as exc:
         raise ProxyTimeoutError(str(exc)) from exc
-    except httpx.ConnectError as exc:
+    except httpx.RequestError as exc:
         raise ProxyUpstreamError(str(exc)) from exc

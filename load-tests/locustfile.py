@@ -14,7 +14,7 @@ class DispatcherUser(HttpUser):
     def on_start(self):
         """Her sanal kullanıcı başlangıçta bir kez register + login yapar."""
         suffix = random_suffix()
-        self.email = f"user_{suffix}@loadtest.local"
+        self.email = f"user_{suffix}@loadtest.com"
         self.password = "TestPass123!"
         self.token = None
         self.delivery_id = None

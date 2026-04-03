@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 motor
-passlib[bcrypt]
+bcrypt
 python-jose[cryptography]
 email-validator
 pytest

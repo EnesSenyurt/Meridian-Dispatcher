@@ -47,16 +47,22 @@ services:
   # --- İZOLE VERİ TABANLARI (DIŞA KAPALI) ---
   redis-dispatcher:
     image: redis:alpine
+    ports:
+      - "16379:6379" # RedisInsight vs. için (localhost:16379)
     networks:
       - meridian_network
 
   mongo-auth:
     image: mongo:latest
+    ports:
+      - "28017:27017" # MongoDB Compass: localhost:28017
     networks:
       - meridian_network
 
   mongo-delivery:
     image: mongo:latest
+    ports:
+      - "28018:27017" # MongoDB Compass: localhost:28018
     networks:
       - meridian_network
 
@@ -71,11 +77,15 @@ services:
 
   redis-tracking:
     image: redis:alpine
+    ports:
+      - "16380:6379" # RedisInsight vs. için Tracking dataları (localhost:16380)
     networks:
       - meridian_network
 
   prometheus:
     image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
@@ -86,7 +96,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - "3030:3000" # Grafana tarayıcıdan http://localhost:3030 ile erişilecek
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_AUTH_ANONYMOUS_ENABLED=true
