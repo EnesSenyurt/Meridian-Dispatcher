@@ -15,3 +15,4 @@ async def update_location(tracking_id: str, location: LocationUpdate, service: T
 @router.get("/{tracking_id}/location", status_code=200, response_model=LocationResponse)
 async def get_location(tracking_id: str, service: TrackingService = Depends(get_tracking_service)):
     return await service.get_location(tracking_id)
+

@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 from jose import JWTError
@@ -14,7 +16,8 @@ class AuthService:
         if existing:
             raise HTTPException(status_code=409, detail="Email already registered")
 
-        hashed = hash_password(body.password)
+        loop = asyncio.get_event_loop()
+        hashed = await loop.run_in_executor(None, hash_password, body.password)
         doc = {"email": body.email, "password_hash": hashed, "role": body.role}
 
         try:

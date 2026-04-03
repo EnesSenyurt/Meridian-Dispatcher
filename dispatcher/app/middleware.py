@@ -9,7 +9,7 @@ SECRET_KEY: str = os.environ["JWT_SECRET"]
 ALGORITHM = "HS256"
 
 # Bu path'ler token kontrolü olmadan geçer
-PUBLIC_PATHS = {"/auth/register", "/auth/login", "/health"}
+PUBLIC_PATHS = {"/auth/register", "/auth/login", "/health", "/metrics"}
 
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
