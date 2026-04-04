@@ -1,6 +1,8 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import Response, JSONResponse
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+import httpx
 import time
 from datetime import datetime
 
@@ -10,7 +12,17 @@ from .proxy import forward_request, ProxyUpstreamError, ProxyTimeoutError
 from .middleware import JWTAuthMiddleware
 from .metrics import REQUEST_COUNT, REQUEST_LATENCY, ACTIVE_REQUESTS, LOG_ENTRY
 
-app = FastAPI(title="Dispatcher Gateway")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await db.connect()
+    async with httpx.AsyncClient(timeout=30.0, limits=httpx.Limits(max_connections=500, max_keepalive_connections=100)) as client:
+        app.state.http_client = client
+        yield
+    await db.disconnect()
+
+
+app = FastAPI(title="Dispatcher Gateway", lifespan=lifespan)
 
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
@@ -58,15 +70,6 @@ async def get_metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
-@app.on_event("startup")
-async def startup_event():
-    await db.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await db.disconnect()
-
 
 @app.get("/health")
 async def health_check():
@@ -91,6 +94,7 @@ async def reverse_proxy(request: Request, path: str):
             headers=dict(request.headers),
             body=await request.body(),
             params=dict(request.query_params),
+            client=request.app.state.http_client,
         )
     except ProxyUpstreamError as exc:
         return JSONResponse(

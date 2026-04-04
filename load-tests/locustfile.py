@@ -97,6 +97,7 @@ class DispatcherUser(HttpUser):
 
         with self.client.get(
             "/delivery",
+            params={"limit": 20, "skip": 0},
             headers=self._auth_headers(),
             catch_response=True,
             name="GET /delivery",
@@ -196,6 +197,6 @@ class DispatcherUser(HttpUser):
             name="GET /tracking/{id}/location",
         ) as resp:
             if resp.status_code == 404:
-                pass  # Henüz konum girilmemiş olabilir
+                resp.success()  # Henüz konum girilmemiş olabilir, beklenen durum
             elif resp.status_code != 200:
                 resp.failure(f"Get tracking failed: {resp.status_code} {resp.text[:200]}")

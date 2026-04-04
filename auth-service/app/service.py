@@ -37,7 +37,12 @@ class AuthService:
 
     async def login(self, body: LoginRequest) -> TokenResponse:
         user = await self.repository.find_by_email(body.email)
-        if not user or not verify_password(body.password, user["password_hash"]):
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        loop = asyncio.get_event_loop()
+        password_valid = await loop.run_in_executor(None, verify_password, body.password, user["password_hash"])
+        if not password_valid:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         token = create_access_token(str(user["_id"]), user["email"], user["role"])

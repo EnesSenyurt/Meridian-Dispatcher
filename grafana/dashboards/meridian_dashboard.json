@@ -1,18 +1,15 @@
 {
-  "title": "Meridian Dispatcher Traffic",
+  "uid": "meridian-load-test",
+  "title": "Meridian Dispatcher - Load Test",
   "timezone": "browser",
   "refresh": "5s",
-  "schemaVersion": 30,
+  "schemaVersion": 36,
   "panels": [
     {
+      "id": 1,
       "type": "stat",
       "title": "Total Requests",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 0,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
       "targets": [
         {
           "expr": "sum(dispatcher_requests_total)",
@@ -21,89 +18,372 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          }
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
         }
-      }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" }
     },
     {
+      "id": 2,
       "type": "stat",
-      "title": "Error Rate (5xx)",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 4,
-        "y": 0
-      },
+      "title": "Req/s (1m)",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(dispatcher_requests_total{status=~\"5..\"}[1m])) / sum(rate(dispatcher_requests_total[1m])) * 100",
+          "expr": "sum(rate(dispatcher_requests_total[1m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Error Rate %",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(dispatcher_requests_total{status=~\"[45]..\"}[1m])) / sum(rate(dispatcher_requests_total[1m])) * 100",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
-          "color": {
-            "mode": "thresholds",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 5
-              }
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
             ]
           }
         }
-      }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
     },
     {
+      "id": 4,
+      "type": "stat",
+      "title": "Active Requests",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "dispatcher_active_requests",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "red", "value": 150 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Avg Latency",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(dispatcher_request_duration_seconds_sum[1m])) / sum(rate(dispatcher_request_duration_seconds_count[1m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.5 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "5xx Errors Total",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(dispatcher_requests_total{status=~\"5..\"})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+    },
+
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Request Rate by Status (Req/s)",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(dispatcher_requests_total[1m]))",
+          "legendFormat": "HTTP {{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "HTTP 2.." },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "HTTP 4.." },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "HTTP 5.." },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "bottom" } }
+    },
+    {
+      "id": 8,
       "type": "piechart",
       "title": "Traffic by Service",
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 0
-      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 4 },
       "targets": [
         {
           "expr": "sum by (service) (dispatcher_requests_total)",
           "legendFormat": "{{service}}",
           "refId": "A"
         }
-      ]
+      ],
+      "options": { "pieType": "donut", "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "right" } }
     },
+
     {
+      "id": 9,
       "type": "timeseries",
-      "title": "Request Rate (Req/s)",
-      "gridPos": {
-        "h": 8,
-        "w": 16,
-        "x": 0,
-        "y": 4
-      },
+      "title": "Latency Percentiles — All Services (p50 / p95 / p99)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
       "targets": [
         {
-          "expr": "sum by (status) (rate(dispatcher_requests_total[1m]))",
-          "legendFormat": "Status {{status}}",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(dispatcher_request_duration_seconds_bucket[1m])))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(dispatcher_request_duration_seconds_bucket[1m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(dispatcher_request_duration_seconds_bucket[1m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "lineWidth": 2, "fillOpacity": 5 }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "p50" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "p95" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "p99" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] } }
+    },
+
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "p95 Latency by Service",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, service) (rate(dispatcher_request_duration_seconds_bucket[1m])))",
+          "legendFormat": "{{service}}",
           "refId": "A"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } }
     },
     {
-      "type": "table",
-      "title": "Detailed Log Table (Pseudo Logger)",
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 12
+      "id": 11,
+      "type": "timeseries",
+      "title": "Error Rate by Service (%)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "targets": [
+        {
+          "expr": "sum by (service) (rate(dispatcher_requests_total{status=~\"[45]..\"}[1m])) / sum by (service) (rate(dispatcher_requests_total[1m])) * 100",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
       },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] } }
+    },
+
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Request Rate by Service (Req/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "targets": [
+        {
+          "expr": "sum by (service) (rate(dispatcher_requests_total[1m]))",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] } }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Active Requests",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "targets": [
+        {
+          "expr": "dispatcher_active_requests",
+          "legendFormat": "Active",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "lineWidth": 2, "fillOpacity": 20 },
+          "color": { "fixedColor": "purple", "mode": "fixed" }
+        }
+      },
+      "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Request Rate by HTTP Method",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
+      "targets": [
+        {
+          "expr": "sum by (method) (rate(dispatcher_requests_total[1m]))",
+          "legendFormat": "{{method}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } }
+    },
+    {
+      "id": 15,
+      "type": "bargauge",
+      "title": "Total Requests by Endpoint (Method + Service)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
+      "targets": [
+        {
+          "expr": "sum by (method, service) (dispatcher_requests_total)",
+          "legendFormat": "{{method}} /{{service}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "gradient", "valueMode": "color" }
+    },
+
+    {
+      "id": 16,
+      "type": "table",
+      "title": "Request Log",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 44 },
       "targets": [
         {
           "expr": "dispatcher_log_entry",
@@ -112,6 +392,26 @@
           "refId": "A"
         }
       ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "status" },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "200": { "color": "green", "index": 0 }, "201": { "color": "green", "index": 1 }, "404": { "color": "orange", "index": 2 }, "422": { "color": "orange", "index": 3 }, "500": { "color": "red", "index": 4 }, "502": { "color": "red", "index": 5 }, "503": { "color": "red", "index": 6 } } }
+                ]
+              }
+            ]
+          }
+        ]
+      },
       "transformations": [
         {
           "id": "organize",
@@ -122,10 +422,18 @@
               "__name__": true,
               "instance": true,
               "job": true
+            },
+            "renameByName": {
+              "timestamp": "Timestamp",
+              "method": "Method",
+              "path": "Path",
+              "status": "Status",
+              "duration_ms": "Duration"
             }
           }
         }
-      ]
+      ],
+      "options": { "sortBy": [{ "desc": true, "displayName": "Timestamp" }] }
     }
   ]
 }

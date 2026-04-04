@@ -13,8 +13,8 @@ async def create_delivery(body: DeliveryCreate, service: DeliveryService = Depen
     return await service.create_delivery(body)
 
 @router.get("", status_code=200)
-async def list_deliveries(service: DeliveryService = Depends(get_delivery_service)):
-    return await service.list_deliveries()
+async def list_deliveries(limit: int = 20, skip: int = 0, service: DeliveryService = Depends(get_delivery_service)):
+    return await service.list_deliveries(limit=limit, skip=skip)
 
 @router.get("/{delivery_id}", status_code=200, response_model=DeliveryResponse)
 async def get_delivery(delivery_id: str, service: DeliveryService = Depends(get_delivery_service)):
