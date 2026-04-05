@@ -65,13 +65,13 @@ Yeni bir teslimat eklendikten sonra kuryenin bunu listelemesi, kabul etmesi ve s
 flowchart TD
     A([Gönderici Giriş Yapar]) --> B{Token Geçerli mi?}
     B -- Hayır --> C([Yetki Yok Hatası Dön])
-    B -- Evet --> D[Teslimat İlanı Oluştur POST /delivery]
-    D --> E[(MongoDB'ye Yazılır)]
-    E --> F([Kuryeler İlanları Listeler GET /delivery])
-    F --> G[Kurye İlanı Kabul Eder PUT /delivery/id]
-    G --> H{İlan Hala Aktif ve Beklemede (Pending) mi?}
+    B -- Evet --> D["Teslimat İlanı Oluştur (POST /delivery)"]
+    D --> E[("MongoDB'ye Yazılır")]
+    E --> F["Kuryeler İlanları Listeler (GET /delivery)"]
+    F --> G["Kurye İlanı Kabul Eder (PUT /delivery/id)"]
+    G --> H{"İlan Hala Aktif ve Beklemede (Pending) mi?"}
     H -- Hayır --> I([Reddet - Başkası Kabul Etmiş])
-    H -- Evet --> J[Status = Accepted Olarak Güncellenir]
+    H -- Evet --> J["Status = Accepted Olarak Güncellenir"]
     J --> K([Tracking / Takip Süreci Başlatılır])
 ```
 
@@ -125,25 +125,25 @@ Mimarinin fonksiyonları ve modüllerin yapısal güvenliği aşağıdaki **Merm
 
 ```mermaid
 graph TD
-    Client((Mobil/Web İstemci \n Gönderici & Kurye)) -->|Tüm İstekler| Dispatcher
+    Client(("Mobil/Web İstemci<br>Gönderici & Kurye")) -->|Tüm İstekler| Dispatcher
 
     subgraph "Dış Dünyaya Kapalı (Network Isolation) İç Ağ"
-        Dispatcher{Dispatcher \n API Gateway}
+        Dispatcher{"Dispatcher<br>API Gateway"}
         
-        Auth[Auth Service \n (Yetkilendirme)]
-        Delivery[Delivery Service \n (Teslimat İşlemleri)]
-        Tracking[Tracking Service \n (Konum Servisi)]
+        Auth["Auth Service<br>(Yetkilendirme)"]
+        Delivery["Delivery Service<br>(Teslimat İşlemleri)"]
+        Tracking["Tracking Service<br>(Konum Servisi)"]
 
-        Dispatcher -.->|JSON / REST| Auth
-        Dispatcher -.->|JSON / REST| Delivery
-        Dispatcher -.->|JSON / REST| Tracking
+        Dispatcher -.->|"JSON / REST"| Auth
+        Dispatcher -.->|"JSON / REST"| Delivery
+        Dispatcher -.->|"JSON / REST"| Tracking
     end
 
     subgraph "İzole Her Servise Özel Veri Tabanları"
-        DB_Disp[(Redis \n API Caching & Log)]
-        DB_Auth[(MongoDB \n Kullanıcılar)]
-        DB_Del[(MongoDB \n Teslimatlar)]
-        DB_Track[(Redis \n Lokasyonlar)]
+        DB_Disp[("Redis<br>API Caching & Log")]
+        DB_Auth[("MongoDB<br>Kullanıcılar")]
+        DB_Del[("MongoDB<br>Teslimatlar")]
+        DB_Track[("Redis<br>Lokasyonlar")]
     end
 
     Dispatcher --> DB_Disp
@@ -152,8 +152,8 @@ graph TD
     Tracking --> DB_Track
 
     subgraph "Monitoring & Analitik"
-        Monitoring[Prometheus / Grafana]
-        Monitoring -.->|Metric Reading| Dispatcher
+        Monitoring["Prometheus / Grafana"]
+        Monitoring -.->|"Metric Reading"| Dispatcher
     end
 ```
 
