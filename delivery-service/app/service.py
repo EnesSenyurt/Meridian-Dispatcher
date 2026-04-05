@@ -47,8 +47,8 @@ class DeliveryService:
         doc["_id"] = result.inserted_id
         return self._serialize(doc)
 
-    async def list_deliveries(self) -> list[DeliveryResponse]:
-        docs = await self.repository.get_deliveries()
+    async def list_deliveries(self, limit: int = 20, skip: int = 0) -> list[DeliveryResponse]:
+        docs = await self.repository.get_deliveries(limit=limit, skip=skip)
         return [self._serialize(d) for d in docs]
 
     async def get_delivery(self, delivery_id: str) -> DeliveryResponse:

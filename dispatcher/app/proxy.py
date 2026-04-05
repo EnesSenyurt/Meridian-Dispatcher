@@ -19,6 +19,7 @@ async def forward_request(
     headers: dict[str, str],
     body: bytes,
     params: dict[str, Any],
+    client: httpx.AsyncClient,
 ) -> httpx.Response:
     clean_headers = {
         k: v for k, v in headers.items()
@@ -26,14 +27,13 @@ async def forward_request(
     }
 
     try:
-        async with httpx.AsyncClient() as client:
-            return await client.request(
-                method=method,
-                url=url,
-                headers=clean_headers,
-                content=body,
-                params=params,
-            )
+        return await client.request(
+            method=method,
+            url=url,
+            headers=clean_headers,
+            content=body,
+            params=params,
+        )
     except httpx.TimeoutException as exc:
         raise ProxyTimeoutError(str(exc)) from exc
     except httpx.RequestError as exc:

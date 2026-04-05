@@ -11,6 +11,7 @@ app.include_router(router)
 @app.on_event("startup")
 async def startup_event():
     await db.connect()
+    await db.execute("deliveries", "create_index", "created_at")
 
 
 @app.on_event("shutdown")
