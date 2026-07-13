@@ -1,30 +1,19 @@
-# Meridian-Dispatcher
-
-## 1️⃣ Proje Bilgileri
-- **Proje Adı:** Meridian-Dispatcher
-- **Ekip Üyeleri:** Ali Buğra Eroğlu, Enes Şenyurt
-- **Tarih:** 5 Nisan 2026
-
-## 2️⃣ Giriş
-
-### Problemin Tanımı
 Günümüzde e-ticaret ve kargo süreçlerinin büyümesiyle birlikte kurye-teslimat eşleştirme operasyonlarındaki anlık yük muazzam boyutlara ulaşmıştır. Geleneksel monolitik sistemler, binlerce kullanıcının eşzamanlı olarak ilan açması ve kuryelerin bu ilanları anlık olarak görüp hızla kabul etmeye çalışması (race condition) senaryosunda kilitlenmekte veya darboğazlara yol açmaktadır.
 
-### Projenin Amacı
 **Meridian-Dispatcher** projesinin amacı, **"Aktif Teslimat İlanlarının Anlık Olarak Listelenmesi ve Kuryeler Tarafından Kabul Edilmesi"** senaryosunu mikroservis tabanlı izole bir mimari ile çözmektir. Bu yaklaşım, sistemin yüksek trafikli eşzamanlı istekler altında bile kesintisiz, dağıtık ve yüksek performansla çalışmasını sağlayarak kilitlenme olmadan kurye atamasını en optimize şekilde gerçekleştirmeyi hedefler.
 
-## 3️⃣ Projenin Tasarımı ve Analizi
+## Projenin Tasarımı ve Analizi
 
-### 3.1 Literatür İncelemesi
+### Literatür İncelemesi
 Mikroservis mimarileri üzerine yapılan çalışmalar, monolitik yapılara kıyasla modüllerin birbirinden izole edilerek yatay eksende bağımsız ölçeklendirilebilmesini (horizontal scaling) sağladığını vurgulamaktadır (örn. Newman, 2015 "Building Microservices"). Ayrıca dış dünyaya kapalı iç ağ servislerinin bir **API Gateway** üzerinden yönetilmesi sistem güvenliğini maksimize eder. NoSQL (MongoDB, Redis) çözümleri ise lokasyon gibi esnek ve I/O hızına ihtiyaç duyan süreçlerin darboğaz oluşturmasını engellemekte etkin bir yöntem olarak literatürde öne çıkmaktadır.
 
-### 3.2 Restful Servisler ve Richardson Olgunluk Modeli
+### Restful Servisler ve Richardson Olgunluk Modeli
 REST (Representational State Transfer), istemci ile sunucu arasında veri aktarımını standartlayan bir mimari stildir. Bu projede mikroservisler, **Richardson Olgunluk Modeli (Richardson Maturity Model)** baz alınarak geliştirilmiştir.
 - **Seviye 0-1:** URL içinde parametre (query string) ile state değiştiren yapı tamamen **kaldırılmış**, her bir kaynak salt kendi URI'si (örn: `/deliveries`) ile tanımlanmıştır.
 - **Seviye 2 (HTTP Metotları):** İşlemler tamamen standartlara uygun olarak HTTP fiilleriyle (GET, POST, PUT, DELETE) ve uygun durum kodlarıyla (200 OK, 201 Created) eşleştirilmiştir.
 - **Seviye 3 (HATEOAS):** İsteklere dönen yanıtlara (JSON) yalnızca veriler değil; istemcinin o durumdan sonra gidebileceği eylem linkleri de eklenerek (örn: *accept_delivery* aksiyon yönlendirmesi) tam bir HATEOAS entegrasyonu hedeflenmiştir.
 
-### 3.3 Sınıf (Class) Yapıları ve Modeli
+### Sınıf (Class) Yapıları ve Modeli
 Servislerdeki veri şemaları (Schema), NoSQL (MongoDB/Redis) doğasına uygun olan sınıflardan oluşturulmuştur. 
 
 ```mermaid
@@ -58,7 +47,7 @@ classDiagram
     Delivery "1" --> "1" Tracking : has active
 ```
 
-### 3.4 Akış Diyagramı (Flowchart)
+### Akış Diyagramı (Flowchart)
 Yeni bir teslimat eklendikten sonra kuryenin bunu listelemesi, kabul etmesi ve sürecin başlamasıyla ilgili temel iş mantığı şeması:
 
 ```mermaid
@@ -75,7 +64,7 @@ flowchart TD
     J --> K([Tracking / Takip Süreci Başlatılır])
 ```
 
-### 3.5 Sequence (Sıralama) Diyagramı
+### Sequence (Sıralama) Diyagramı
 Dispatcher (Gateway) üzerinden geçen yetkili bir teslimatı kabul etme sürecinin (Accept Delivery) modüller arası haberleşme adımları aşağıdaki gibidir:
 
 ```mermaid
@@ -98,7 +87,7 @@ sequenceDiagram
     Dispatcher-->>Courier: 200 OK
 ```
 
-### 3.6 Algoritmalar ve Karmaşıklık Analizi (Complexity Analysis)
+### Algoritmalar ve Karmaşıklık Analizi (Complexity Analysis)
 **1. Gönderi Listeleme (Listing - GET /delivery):**
 Teslimatları filtrelerken arka plandaki arama yükü:
 - **Zaman Karmaşıklığı (Time Complexity):** İlgili veritabanı alanı (`status`) indexli (dizinlenmiş) olduğunda, veri çekmek logaritmik olan **O(log N) + K** (N: kayıt sayısı, K: sayfalama adedi) hızındadır.
@@ -109,17 +98,17 @@ Teslimatları filtrelerken arka plandaki arama yükü:
 - **Zaman Karmaşıklığı:** Hash-Index yapısından (B-Tree vb.) yararlanıldığı için işlemler ortalamada **O(1)** sabittir. 
 
 
-## 4️⃣ Projenin Modülleri ve Mimari Gösterim
+## Projenin Modülleri ve Mimari Gösterim
 
 Projenin altyapısı, tüm mikroservisleri dış dünyadan gizleyen kapalı bir iç ağ yapısı (Network Isolation) üzerine konumlandırılmıştır. Açık internetten gelen çağrılar yalnızca API Gateway tarafından karşılanır.
 
-### 4.1 Modüllerin İşlevleri
+### Modüllerin İşlevleri
 1. **Dispatcher (API Gateway):** Sistemin giriş noktası, orkestra şefi ve reverse-proxy modülüdür. Yük dengelemesini (load balancing) yapar, token onaylarını yetkili servise iletir ve arka plandaki mikroservislerin yerlerini bilir.
 2. **Auth Service:** Siber güvenlik, token (JWT) üretim - validasyon operasyonlarını ve kullanıcı yönetimi işlemlerini kendi döküman veritabanında gerçekleştirir.
 3. **Delivery Service:** İlan yayınlama ile sistemin en yoğun olan kurye eşleşme süreçlerini (CRUD) kontrol eden teslimat ana modülüdür.
 4. **Tracking Service:** Aktif teslimat süreçlerinde anlık paket ile kurye izleme faaliyetlerini (lokasyon akışlarını) yürütür. Bu aşamada performans için I/O hızı yüksek Redis mimarileri tetiklenir.
 
-### 4.2 Sistem Mimarisi Modül Diyagramı
+### Sistem Mimarisi Modül Diyagramı
 
 Mimarinin fonksiyonları ve modüllerin yapısal güvenliği aşağıdaki **Mermaid** diyagramında gösterilmiştir.
 
@@ -159,12 +148,12 @@ graph TD
 
 
 
-## 5️⃣ Uygulama
+## Uygulama
 
-### 5.1 Ağ İzolasyonu (Network Isolation) Doğrulaması
+### Ağ İzolasyonu (Network Isolation) Doğrulaması
 Mimarinin temel gereksinimi olan "Dış dünyaya sadece Dispatcher açık olmalı" kuralı test edilmiş, istemcilerin `auth-service` veya `delivery-service` gibi iç servislere doğrudan erişimi engellenerek `Connection refused` dönmesi Docker Compose ağ kuralları ile kontrol altına alınmıştır.
 
-### 5.2 Test Senaryoları ve Yük Testi (Performance Testing)
+### Test Senaryoları ve Yük Testi (Performance Testing)
 Sistemin yoğun trafik altındaki davranışını ölçmek amacıyla **Locust** aracı ile performans ve stres testleri gerçekleştirilmiştir. Test sırasında aşamalı olarak **500 eşzamanlı kurye ve gönderici (Concurrent Users)** simüle edilmiştir. 
 
 Sistem üzerinde gerçekleştirilen senaryolar:
@@ -172,7 +161,7 @@ Sistem üzerinde gerçekleştirilen senaryolar:
 2. `POST`, `GET`, `PUT`, `DELETE /delivery` süreçleri ile teslimat ilanlarının gönderilmesi, listelenmesi ve güncellenmesi,
 3. `POST`, `GET /tracking/{id}/location` süreçleri ile anlık konum takip sisteminin yüksek kullanıcı sayısındaki stabilitesi ölçülmüştür.
 
-### 5.3 Ekran Görüntüleri ve Test Sonuçları
+### Ekran Görüntüleri ve Test Sonuçları
 Toplamda test boyunca yaratılan **11.190 adet istek** API Gateway (Dispatcher) üzerinden iç servislere ve ardından izole MongoDB veritabanlarına ulaştırılmış, sistem dışarıdan gelen bu çoklu taleplere **0 hata (%100 başarı)** ile yanıt vermiştir. 
 
 
@@ -190,7 +179,7 @@ Toplamda test boyunca yaratılan **11.190 adet istek** API Gateway (Dispatcher) 
 
 ---
 
-## 6️⃣ Sonuç ve Tartışma
+## Sonuç ve Tartışma
 
 ### Başarılar
 1. **Güçlü Mimari İzolasyon:** 500 anlık kullanıcılı stres testine maruz bırakıldığında bile tüm servis haberleşmesi `Dispatcher` gateway üstünden geçmiş, izole ağ tasarımı başarılı biçimde çalışmıştır. Toplamda **0 Request Fail** durumu görülmektedir.
